@@ -1,15 +1,16 @@
 const { query } = require('../../lib/db');
 const { applyCors } = require('../../lib/cors');
+const { getQuery, readJsonBody, sendJson } = require('../../lib/http');
 
 // GET    /api/boardgames/:id    -> fetch a single boardgame
 // PUT    /api/boardgames/:id    -> update a single boardgame
 module.exports = async function handler(req, res) {
   if (applyCors(req, res)) return;
 
-  const { id } = req.query;
+  const { id } = getQuery(req);
 
   if (!id || Number.isNaN(Number(id))) {
-    return res.status(400).json({ error: 'A numeric id is required' });
+    return sendJson(res, 400, { error: 'A numeric id is required' });
   }
 
   if (req.method === 'GET') {
@@ -21,7 +22,7 @@ module.exports = async function handler(req, res) {
   }
 
   res.setHeader('Allow', 'GET, PUT, OPTIONS');
-  return res.status(405).json({ error: `Method ${req.method} not allowed` });
+  return sendJson(res, 405, { error: `Method ${req.method} not allowed` });
 };
 
 async function handleGet(req, res, id) {
@@ -32,21 +33,28 @@ async function handleGet(req, res, id) {
     );
 
     if (games.length === 0) {
-      return res.status(404).json({ error: 'Boardgame not found' });
+      return sendJson(res, 404, { error: 'Boardgame not found' });
     }
 
-    return res.status(200).json(games[0]);
+    return sendJson(res, 200, games[0]);
   } catch (err) {
     console.error('Failed to fetch boardgame', err);
-    return res.status(500).json({ error: 'Failed to fetch boardgame' });
+    return sendJson(res, 500, { error: 'Failed to fetch boardgame' });
   }
 }
 
 async function handlePut(req, res, id) {
-  const { title, publisher, min_players, max_players, play_time_minutes } = req.body || {};
+  let body;
+  try {
+    body = await readJsonBody(req);
+  } catch (err) {
+    return sendJson(res, 400, { error: 'Invalid JSON body' });
+  }
+
+  const { title, publisher, min_players, max_players, play_time_minutes } = body;
 
   if (!title) {
-    return res.status(400).json({ error: 'title is required' });
+    return sendJson(res, 400, { error: 'title is required' });
   }
 
   try {
@@ -57,10 +65,10 @@ async function handlePut(req, res, id) {
     );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Boardgame not found' });
+      return sendJson(res, 404, { error: 'Boardgame not found' });
     }
 
-    return res.status(200).json({
+    return sendJson(res, 200, {
       id: Number(id),
       title,
       publisher: publisher || null,
@@ -70,6 +78,6 @@ async function handlePut(req, res, id) {
     });
   } catch (err) {
     console.error('Failed to update boardgame', err);
-    return res.status(500).json({ error: 'Failed to update boardgame' });
+    return sendJson(res, 500, { error: 'Failed to update boardgame' });
   }
 }

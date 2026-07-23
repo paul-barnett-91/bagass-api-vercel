@@ -1,5 +1,7 @@
 // Application entrypoint. Hit directly via api/index.js, and via the "/"
 // rewrite in vercel.json, to show a human-readable list of the API's routes.
+const { sendHtml, sendJson } = require('./lib/http');
+
 const ENDPOINTS = [
   { method: 'GET', path: '/api/boardgames', description: 'List all boardgames' },
   { method: 'POST', path: '/api/boardgames', description: 'Create a boardgame' },
@@ -10,7 +12,7 @@ const ENDPOINTS = [
 module.exports = function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
-    return res.status(405).json({ error: `Method ${req.method} not allowed` });
+    return sendJson(res, 405, { error: `Method ${req.method} not allowed` });
   }
 
   const rows = ENDPOINTS.map(
@@ -41,6 +43,5 @@ module.exports = function handler(req, res) {
 </body>
 </html>`;
 
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  return res.status(200).send(html);
+  return sendHtml(res, 200, html);
 };

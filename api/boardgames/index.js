@@ -1,5 +1,6 @@
 const { query } = require('../../lib/db');
 const { applyCors } = require('../../lib/cors');
+const { readJsonBody, sendJson } = require('../../lib/http');
 
 // GET    /api/boardgames        -> list all boardgames
 // POST   /api/boardgames        -> create a boardgame
@@ -15,7 +16,7 @@ module.exports = async function handler(req, res) {
   }
 
   res.setHeader('Allow', 'GET, POST, OPTIONS');
-  return res.status(405).json({ error: `Method ${req.method} not allowed` });
+  return sendJson(res, 405, { error: `Method ${req.method} not allowed` });
 };
 
 async function handleGet(req, res) {
@@ -24,18 +25,25 @@ async function handleGet(req, res) {
     const games = await query(
       'SELECT id, title, publisher, min_players, max_players, play_time_minutes FROM boardgames ORDER BY title'
     );
-    return res.status(200).json(games);
+    return sendJson(res, 200, games);
   } catch (err) {
     console.error('Failed to list boardgames', err);
-    return res.status(500).json({ error: 'Failed to fetch boardgames' });
+    return sendJson(res, 500, { error: 'Failed to fetch boardgames' });
   }
 }
 
 async function handlePost(req, res) {
-  const { title, publisher, min_players, max_players, play_time_minutes } = req.body || {};
+  let body;
+  try {
+    body = await readJsonBody(req);
+  } catch (err) {
+    return sendJson(res, 400, { error: 'Invalid JSON body' });
+  }
+
+  const { title, publisher, min_players, max_players, play_time_minutes } = body;
 
   if (!title) {
-    return res.status(400).json({ error: 'title is required' });
+    return sendJson(res, 400, { error: 'title is required' });
   }
 
   try {
@@ -45,7 +53,7 @@ async function handlePost(req, res) {
       [title, publisher || null, min_players || null, max_players || null, play_time_minutes || null]
     );
 
-    return res.status(201).json({
+    return sendJson(res, 201, {
       id: result.insertId,
       title,
       publisher: publisher || null,
@@ -55,6 +63,6 @@ async function handlePost(req, res) {
     });
   } catch (err) {
     console.error('Failed to create boardgame', err);
-    return res.status(500).json({ error: 'Failed to create boardgame' });
+    return sendJson(res, 500, { error: 'Failed to create boardgame' });
   }
 }
