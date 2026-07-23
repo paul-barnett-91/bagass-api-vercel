@@ -2,11 +2,9 @@ const { query } = require("../../lib/db");
 const { applyCors } = require("../../lib/cors");
 const { readJsonBody, sendJson } = require("../../lib/http");
 const { hashPassword } = require("../../lib/password");
+const { requireAuth } = require("../../lib/auth");
 
 // POST   /api/auth/set-password    -> hash and store a new password for an existing user
-//
-// Deliberately left unprotected for now - this is used to bootstrap the
-// admin password before auth checks are added to the rest of the API.
 module.exports = async function handler(req, res) {
   if (applyCors(req, res)) return;
 
@@ -14,6 +12,8 @@ module.exports = async function handler(req, res) {
     res.setHeader("Allow", "POST, OPTIONS");
     return sendJson(res, 405, { error: `Method ${req.method} not allowed` });
   }
+
+  if (!requireAuth(req, res)) return;
 
   let body;
   try {

@@ -2,9 +2,10 @@ const { query, withTransaction } = require("../../lib/db");
 const { applyCors } = require("../../lib/cors");
 const { getQuery, readJsonBody, sendJson } = require("../../lib/http");
 const { validateResults, insertResults } = require("../../lib/gamePlayResults");
+const { requireAuth } = require("../../lib/auth");
 
 // GET    /api/game_plays?season=<season>    -> list plays for a season, with game name joined in
-// POST   /api/game_plays                    -> create a game play, optionally with its results
+// POST   /api/game_plays                    -> create a game play, optionally with its results (requires auth)
 module.exports = async function handler(req, res) {
   if (applyCors(req, res)) return;
 
@@ -13,6 +14,7 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method === "POST") {
+    if (!requireAuth(req, res)) return;
     return handlePost(req, res);
   }
 

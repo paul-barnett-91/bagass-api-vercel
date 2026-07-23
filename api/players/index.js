@@ -1,9 +1,10 @@
 const { query } = require("../../lib/db");
 const { applyCors } = require("../../lib/cors");
 const { readJsonBody, sendJson } = require("../../lib/http");
+const { requireAuth } = require("../../lib/auth");
 
 // GET    /api/players        -> list all players
-// POST   /api/players        -> create a player
+// POST   /api/players        -> create a player (requires auth)
 module.exports = async function handler(req, res) {
   if (applyCors(req, res)) return;
 
@@ -12,6 +13,7 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method === "POST") {
+    if (!requireAuth(req, res)) return;
     return handlePost(req, res);
   }
 

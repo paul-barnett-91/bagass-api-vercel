@@ -1,9 +1,10 @@
 const { query } = require("../../lib/db");
 const { applyCors } = require("../../lib/cors");
 const { getQuery, readJsonBody, sendJson } = require("../../lib/http");
+const { requireAuth } = require("../../lib/auth");
 
-// GET    /api/boardgames/:id    -> fetch a single boardgame
-// PUT    /api/boardgames/:id    -> update a single boardgame
+// GET    /api/games/:id    -> fetch a single game
+// PUT    /api/games/:id    -> update a single game (requires auth)
 module.exports = async function handler(req, res) {
   if (applyCors(req, res)) return;
 
@@ -18,6 +19,7 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method === "PUT") {
+    if (!requireAuth(req, res)) return;
     return handlePut(req, res, id);
   }
 
