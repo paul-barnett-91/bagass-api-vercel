@@ -1,0 +1,15 @@
+{
+  "name": "vercel-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Serverless API on Vercel providing a MariaDB-backed interface for a boardgame library frontend",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.0"
+  },
+  "devDependencies": {
+    "vercel": "^37.0.0"
+  }
+}
