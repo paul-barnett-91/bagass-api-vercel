@@ -24,13 +24,13 @@ module.exports = async function handler(req, res) {
 async function handleGet(req, res) {
   try {
     const games = await query(
-      `SELECT g.id, g.name, g.minPlayers, g.maxPlayers, g.playTimeMinutes,
-          COUNT(gp.id) AS totalPlays,
-          CAST(SUM(CASE WHEN active.name IS NOT NULL AND gp.season = active.name THEN 1 ELSE 0 END) AS SIGNED) AS totalPlaysThisSeason
-        FROM games g
-        LEFT JOIN game_plays gp ON gp.gameId = g.id
-        LEFT JOIN (SELECT name FROM seasons WHERE activeSeason = 1 LIMIT 1) active ON 1 = 1
-        GROUP BY g.id, g.name, g.minPlayers, g.maxPlayers, g.playTimeMinutes
+      `SELECT g.id, g.name, g.minPlayers, g.maxPlayers, g.playTimeMinutes,                                                                                     
+        COUNT(gp.id) AS totalPlays,                                                                                                                          
+        CAST(SUM(CASE WHEN gp.season = active.id THEN 1 ELSE 0 END) AS SIGNED) AS totalPlaysThisSeason                         
+        FROM games g                                                                                                                                           
+        LEFT JOIN game_plays gp ON gp.gameId = g.id                                                                                                            
+        LEFT JOIN (SELECT id FROM seasons WHERE activeSeason = 1 LIMIT 1) active ON 1 = 1                                                                    
+        GROUP BY g.id, g.name, g.minPlayers, g.maxPlayers, g.playTimeMinutes                                                                                   
         ORDER BY g.name`
     );
     return sendJson(res, 200, games);
